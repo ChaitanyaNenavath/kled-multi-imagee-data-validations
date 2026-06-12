@@ -1,0 +1,106 @@
+1. Section: “How my experience maps to Kled” 
+“Before diving into the system design, I just want to quickly connect my past experience to this 
+problem. 
+At Stripe, I worked on fraud detection systems at scale, where we were identifying suspicious 
+transactions in real time. That problem is quite similar to Kled’s, because here also we’re 
+dealing with adversarial behavior — but instead of financial fraud, it’s data fraud like fake 
+images, duplicates, or manipulated content. 
+I also built real-time data pipelines using tools like Kinesis and Lambda, which maps well to 
+how Kled would ingest and process user uploads continuously. 
+On the ML side, I worked on model monitoring, drift detection, and data quality checks, which 
+directly relates to ensuring high-quality datasets for AI training. 
+And I’ve also worked with vector databases and embeddings, which are very useful for problems 
+like duplicate detection and semantic similarity in Kled’s system. 
+So overall, I see a strong overlap between what I’ve built and the challenges Kled is solving.” 
+• At Stripe → fraud detection at scale (very similar to adversarial data problem) 
+• Real-time pipelines → matches Kled ingestion pipeline 
+• Model monitoring + drift → matches data quality problem 
+• Vector DB + LLM → useful for duplicate + semantic checks 
+2. Core System Design: 
+Now I’ll walk through how I would design an end-to-end data validation pipeline for 
+Kled. 
+First, a user uploads an image or video through the app. This request hits an API layer, 
+which immediately stores the raw file in object storage like S3 and pushes an event into 
+a streaming system like Kafka or Kinesis for asynchronous processing. 
+Next comes the preprocessing layer, where we standardize the data. For images, we 
+normalize size and format. For videos, we extract key frames. We also extract metadata 
+like EXIF information for later validation. 
+Then the data flows into the ML validation pipeline, which is a set of independent 
+modules — like synthetic detection, duplicate detection, NSFW filtering, and metadata 
+checks. Each module produces a score or signal instead of making a final decision. 
+After that, we aggregate all these signals into a unified risk score. Based on thresholds, 
+we either accept, reject, or send the content for human review if the confidence is low. 
+If human reviewers are involved, their feedback is captured and fed back into the 
+system to improve models over time. 
+Finally, validated data is stored in a clean, structured format and indexed for 
+downstream use, like training AI models or licensing to customers.” 
+Flow: 
+1. User uploads image/video 
+2. Pre-processing layer 
+3. ML validation pipeline 
+4. Risk scoring 
+5. Human review (if needed) 
+6. Store clean data 
+Perfect — here is your crisp 2–2 line version for each part (easy to remember + speak): 
+A. Ingestion Layer 
+User uploads image/video → API stores raw file in S3 and captures metadata like EXIF 
+and device info. 
+An event is pushed to Kafka/Kinesis so processing happens asynchronously and scales 
+easily. 
+B. Preprocessing 
+We standardize data by resizing images, extracting frames from videos, and normalizing 
+formats. 
+EXIF metadata is extracted and validated to detect inconsistencies or tampering. 
+C. ML Validation Pipeline (Overall) 
+I design this as a multi-signal system where each model handles a specific validation 
+task. 
+Instead of one decision, each module outputs a signal that contributes to final risk 
+scoring. 
+1. Synthetic / AI Detection 
+Use CNNs or transformer models to detect GAN or diffusion-generated artifacts in 
+images/videos. 
+These models learn statistical patterns and inconsistencies that indicate synthetic 
+content. 
+2. Duplicate Detection 
+Use pHash for fast detection of near-duplicate images with small modifications. 
+Then use embeddings (CLIP/ResNet) + FAISS/Pinecone to detect semantic similarity at 
+scale. 
+Real-time vs Batch 
+Real-time processing handles quick fraud checks right after upload to give fast 
+feedback to users. 
+Batch processing runs deeper validations like similarity search or model re-evaluation 
+at scale. 
+Latency Optimization 
+Use asynchronous pipelines so user requests are not blocked by heavy ML processing. 
+Pre-compute embeddings and cache frequent results to reduce response time. 
+Monitoring 
+Continuously track data drift and model performance to ensure predictions remain 
+reliable over time. 
+Detect accuracy drops early and trigger retraining or alerts. 
+Your Experience (Tie-In) 
+I’ve worked on observability using Prometheus and OpenTelemetry for real-time system 
+monitoring. 
+Also implemented model monitoring with MLflow and Weights & Biases to track drift 
+and performance. 
+4. Abuse & Edge Cases 
+Users may slightly modify images, inject fake EXIF data, or add noise to bypass 
+detection systems. 
+So the system must be multi-layered, combining multiple signals instead of relying on a 
+single model. 
+5. Evaluation Strategy 
+Balance precision and recall carefully to avoid blocking genuine users while still 
+catching fraud. 
+Use A/B testing pipelines to continuously evaluate model performance and improve 
+decisions. 
+6. Product Ideas 
+Idea 1: Contributor Trust Score 
+Assign a dynamic trust score to users based on past behavior to reduce repeated fraud. 
+High-trust users get faster approvals, while low-trust users undergo stricter validation. 
+Idea 2: Real-time Feedback 
+Provide clear feedback like “upload rejected due to duplication or quality issue.” 
+This improves user experience and reduces repeated invalid submissions. 
+7. Tie Back to Your Experience 
+At Stripe, I worked on fraud detection systems at scale, which closely relates to 
+adversarial data problems. 
+I also built real-time pipelines and anomaly detection models, which align well with 
+Kled’s system needs. 

@@ -1,0 +1,25 @@
+[
+    {
+        "image": "c:\\Users\\cnenavath\\Downloads\\Hi\\Hi\\dummy_image.jpg",
+        "status": "SUCCESS",
+        "metadata": {},
+        "risk_score": 0.3,
+        "decision": "ACCEPT",
+        "comment": "No EXIF metadata found."
+    },
+    {
+        "image": "c:\\Users\\cnenavath\\Downloads\\Hi\\Hi\\image2.jpg",
+        "status": "SUCCESS",
+        "metadata": {},
+        "risk_score": 0.3,
+        "decision": "ACCEPT",
+        "comment": "No EXIF metadata found."
+    },
+    {
+        "image": "c:\\Users\\cnenavath\\Downloads\\Hi\\Hi\\image3.jpg",
+        "status": "FAILED",
+        "decision": "ERROR",
+        "risk_score": "NA",
+        "comment": "Image could not be loaded"
+    }
+]
